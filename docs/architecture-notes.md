@@ -130,3 +130,30 @@ The following questions will be investigated during development:
 6. How can inventory remain accurate when multiple operations happen simultaneously?
 7. How should the application handle server or database failures?
 8. How should ResellOS be tested and deployed?
+
+
+## 10. Request-Response LifeCycle
+
+User Interaction: When a reseller opens the inventory dashboard, they see all of their products, current quantities, units sold, and other potential metrics. When a user navigates to a product of their choosing, they can see how much stock is available.
+
+Frontend Request: JavaScript sends an HTTP request (e.g., GET /api/products or GET /api/inventory) to the backend to retrieve inventory data and check product availability.
+
+Backend Processing & Authentication Check:
+
+The backend validates the user's authenticated credentials, such as a session cookie or an authentication token. 
+
+If the user is not authenticated: The backend immediately halts processing and returns a 401 Unauthorized status code with an error message directing the user to log in.
+
+Authorization & Database Interaction:
+
+The backend verifies user permissions.
+
+If the user attempts to access another reseller's products: The backend blocks the request.
+
+If authorized: The backend queries the database, scoping records strictly to the authenticated business. It handles safe transaction execution, concurrent reads/writes, and rollback protocols if conflicts occur.
+
+If the database is temporarily unavailable: The backend catches the connection timeout or failure, logs the incident, and returns a 503 Service Unavailable (or 500 Internal Server Error) status code.
+
+HTTP Response (Success): When the database query succeeds, the backend returns the correct inventory data in a structured JSON format with a 200 OK status code.
+
+Frontend Update: The browser parses the JSON response, displays the available products, and updates the UI based on live stock counts. In the event of an error response (401, 403, or 503), the appropriate user-friendly error message or login prompt is rendered on screen.
